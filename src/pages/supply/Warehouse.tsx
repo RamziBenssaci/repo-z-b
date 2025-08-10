@@ -410,7 +410,6 @@ export default function Warehouse() {
           className="admin-btn-info flex items-center gap-2"
         >
           <ShoppingCart size={16} />
-          <span className="hidden sm:inline">أوامر الصرف</span>
           <span className="sm:hidden">صرف</span>
         </button>
       </div>
