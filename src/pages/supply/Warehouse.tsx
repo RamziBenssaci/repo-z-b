@@ -409,7 +409,6 @@ export default function Warehouse() {
           onClick={() => setShowWithdrawForm(true)}
           className="admin-btn-info flex items-center gap-2"
         >
-          <ShoppingCart size={16} />
           <span className="sm:hidden">صرف</span>
         </button>
       </div>
