@@ -1,6 +1,6 @@
 // API Configuration and Utilities
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api2.obourexpress.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api2.obourexpress.com/api';
 
 // API Response Types
 export interface ApiResponse<T = any> {
