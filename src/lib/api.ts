@@ -53,16 +53,27 @@ export const getStoredUser = (userType: 'admin' | 'staff') => {
   return userData ? JSON.parse(userData) : null;
 };
 
-// Clear stored auth data - ENHANCED VERSION
+// Clear stored auth data - ENHANCED VERSION WITH DEBUGGING
 export const clearAuthData = (userType: 'admin' | 'staff') => {
+  console.log(`🔍 BEFORE clearAuthData for ${userType}:`);
+  console.log(`Token exists: ${!!localStorage.getItem(`${userType}_token`)}`);
+  console.log(`User exists: ${!!localStorage.getItem(`${userType}_user`)}`);
+  console.log(`Token value: ${localStorage.getItem(`${userType}_token`)?.substring(0, 20)}...`);
+  
+  // Clear the data
   localStorage.removeItem(`${userType}_token`);
   localStorage.removeItem(`${userType}_user`);
+  
+  // Verify it's actually cleared
+  console.log(`🔍 AFTER clearAuthData for ${userType}:`);
+  console.log(`Token exists: ${!!localStorage.getItem(`${userType}_token`)}`);
+  console.log(`User exists: ${!!localStorage.getItem(`${userType}_user`)}`);
   
   // Optional: Clear any other related cached data
   // localStorage.removeItem('cached_facilities');
   // localStorage.removeItem('cached_dashboard');
   
-  console.log(`Cleared ${userType} authentication data`);
+  console.log(`✅ Cleared ${userType} authentication data`);
 };
 
 // Helper function to determine current user type
@@ -157,56 +168,70 @@ export const authApi = {
     });
   },
 
-  // Admin logout - FIXED VERSION
+  // Admin logout - FIXED VERSION WITH ENHANCED DEBUGGING
   adminLogout: async (): Promise<ApiResponse> => {
+    console.log('🚪 Starting admin logout process...');
+    
     try {
-      console.log('Attempting admin logout...');
+      console.log('📡 Calling admin logout API...');
       
       // Call the logout API
       const response = await apiCall<ApiResponse>('/admin/logout', {
         method: 'POST',
       }, true, 'admin');
       
-      console.log('Admin logout API successful, clearing stored data...');
+      console.log('✅ Admin logout API successful:', response);
+      console.log('🧹 About to clear stored data...');
       
       // Clear stored data after successful logout
       clearAuthData('admin');
       
+      console.log('🏁 Admin logout process completed successfully');
       return response;
     } catch (error) {
-      console.warn('Admin logout API failed, but clearing local data anyway:', error);
+      console.error('❌ Admin logout API failed:', error);
+      console.log('🧹 Clearing local data anyway...');
       
       // Even if the API call fails, clear local data
       // (in case token is invalid/expired)
       clearAuthData('admin');
+      
+      console.log('🏁 Admin logout process completed (with API error)');
       
       // Re-throw the error so the calling component can handle it
       throw error;
     }
   },
 
-  // Staff logout - FIXED VERSION
+  // Staff logout - FIXED VERSION WITH ENHANCED DEBUGGING
   staffLogout: async (): Promise<ApiResponse> => {
+    console.log('🚪 Starting staff logout process...');
+    
     try {
-      console.log('Attempting staff logout...');
+      console.log('📡 Calling staff logout API...');
       
       // Call the logout API
       const response = await apiCall<ApiResponse>('/staff/logout', {
         method: 'POST',
       }, true, 'staff');
       
-      console.log('Staff logout API successful, clearing stored data...');
+      console.log('✅ Staff logout API successful:', response);
+      console.log('🧹 About to clear stored data...');
       
       // Clear stored data after successful logout
       clearAuthData('staff');
       
+      console.log('🏁 Staff logout process completed successfully');
       return response;
     } catch (error) {
-      console.warn('Staff logout API failed, but clearing local data anyway:', error);
+      console.error('❌ Staff logout API failed:', error);
+      console.log('🧹 Clearing local data anyway...');
       
       // Even if the API call fails, clear local data
       // (in case token is invalid/expired)
       clearAuthData('staff');
+      
+      console.log('🏁 Staff logout process completed (with API error)');
       
       // Re-throw the error so the calling component can handle it
       throw error;
@@ -221,10 +246,12 @@ export const authApi = {
   },
 };
 
-// Alternative unified logout function
+// Alternative unified logout function - ENHANCED WITH DEBUGGING
 export const logout = async (userType: 'admin' | 'staff'): Promise<void> => {
+  console.log(`🚪 Starting unified ${userType} logout...`);
+  
   try {
-    console.log(`Attempting ${userType} logout...`);
+    console.log(`📡 Calling ${userType} logout API...`);
     
     // Determine the correct logout endpoint
     const endpoint = userType === 'admin' ? '/admin/logout' : '/staff/logout';
@@ -234,19 +261,59 @@ export const logout = async (userType: 'admin' | 'staff'): Promise<void> => {
       method: 'POST',
     }, true, userType);
     
-    console.log(`${userType} logout API successful, clearing stored data...`);
+    console.log(`✅ ${userType} logout API successful, clearing stored data...`);
     
     // Clear stored data after successful logout
     clearAuthData(userType);
   } catch (error) {
-    console.warn(`${userType} logout API failed, but clearing local data anyway:`, error);
+    console.warn(`❌ ${userType} logout API failed, but clearing local data anyway:`, error);
     
     // Even if the API call fails, clear local data
     // This handles cases where the token is already invalid/expired
     clearAuthData(userType);
-    
-    // Don't throw the error - logout should always succeed locally
   }
+  
+  console.log(`🏁 Unified ${userType} logout completed`);
+};
+
+// DEBUGGING UTILITY FUNCTIONS
+export const debugAuthState = () => {
+  console.log('🔍 CURRENT AUTH STATE:');
+  console.log('Admin token:', localStorage.getItem('admin_token')?.substring(0, 20) + '...' || 'null');
+  console.log('Staff token:', localStorage.getItem('staff_token')?.substring(0, 20) + '...' || 'null');
+  console.log('Admin user:', !!localStorage.getItem('admin_user'));
+  console.log('Staff user:', !!localStorage.getItem('staff_user'));
+  console.log('isAuthenticated(admin):', isAuthenticated('admin'));
+  console.log('isAuthenticated(staff):', isAuthenticated('staff'));
+  console.log('getCurrentUserType():', getCurrentUserType());
+  
+  // Show all localStorage keys that might be related
+  const allKeys = Object.keys(localStorage);
+  const authKeys = allKeys.filter(key => key.includes('token') || key.includes('user') || key.includes('admin') || key.includes('staff'));
+  console.log('All auth-related localStorage keys:', authKeys);
+};
+
+// Force clear all auth data (nuclear option)
+export const forceLogoutAll = () => {
+  console.log('☢️  FORCE CLEARING ALL AUTH DATA');
+  
+  const allKeys = Object.keys(localStorage);
+  const authKeys = allKeys.filter(key => 
+    key.includes('token') || 
+    key.includes('user') || 
+    key.includes('admin') || 
+    key.includes('staff')
+  );
+  
+  console.log('Removing keys:', authKeys);
+  
+  authKeys.forEach(key => {
+    localStorage.removeItem(key);
+    console.log(`Removed: ${key}`);
+  });
+  
+  console.log('✅ Force logout completed');
+  debugAuthState();
 };
 
 // Reports API calls
