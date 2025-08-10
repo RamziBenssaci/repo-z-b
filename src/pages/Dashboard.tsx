@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { mockReports, mockInventoryItems, mockTransactions, dentalClinicsData } from '@/data/mockData';
-
+import { logout } from '@/lib/api';
 // Mock facilities data
 const mockFacilities = [
   { id: 1, name: 'مركز صحي الملز', code: 'RC001', location: 'حي الملز', sector: 'الرياض', type: 'الرياض - مراكز شرق', totalClinics: 8, working: 7, outOfOrder: 1, notWorking: 0, isActive: true },
@@ -228,6 +228,85 @@ const totalOutOfOrder = 5;
   const facilityTypes = facilities && facilities.length > 0 
     ? facilities.map((f: any) => f.name)
     : ['مركز صحي', 'مستشفى', 'مركز تخصصي'];
+// Logout confirmation dialog component
+const LogoutButton = () => {
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      
+      // Determine user type (you might need to adjust this logic)
+      const userType = localStorage.getItem('admin_token') ? 'admin' : 'staff';
+      
+      await logout(userType);
+      
+      toast({
+        title: "تم تسجيل الخروج بنجاح",
+        description: "تم تسجيل خروجك من النظام",
+      });
+      
+      // Redirect to login page
+      window.location.href = '/login';
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast({
+        title: "خطأ في تسجيل الخروج",
+        description: error.message || "حدث خطأ أثناء تسجيل الخروج",
+        variant: "destructive",
+      });
+      
+      // Even if API fails, redirect to login
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutDialogOpen(false);
+    }
+  };
+return (
+    <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-white/20 border-white/30 text-white hover:bg-white/30 p-2 sm:px-3 sm:py-2"
+        >
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
+          </svg>
+          <span className="hidden sm:inline mr-2">تسجيل الخروج</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-right">تأكيد تسجيل الخروج</DialogTitle>
+        </DialogHeader>
+        <div className="text-right space-y-4">
+          <p className="text-muted-foreground">هل أنت متأكد من أنك تريد تسجيل الخروج من النظام؟</p>
+          <div className="flex justify-end gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsLogoutDialogOpen(false)}
+              disabled={isLoggingOut}
+            >
+              إلغاء
+            </Button>
+            <Button 
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isLoggingOut ? 'جارٍ تسجيل الخروج...' : 'تسجيل الخروج'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
   return (
     <div className="space-y-4">
@@ -243,26 +322,11 @@ const totalOutOfOrder = 5;
               <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-full">مرحباً بك</span>
             </div>
             <div className="relative group">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30 p-2 sm:px-3 sm:py-2"
-                onClick={() => {
-                  if (confirm('هل تريد تسجيل الخروج؟')) {
-                    window.location.href = '/login';
-                  }
-                }}
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="hidden sm:inline mr-2">تسجيل الخروج</span>
-              </Button>
+              <LogoutButton />
             </div>
           </div>
         </div>
       </div>
-
       {/* Dental Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
