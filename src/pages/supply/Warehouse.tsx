@@ -405,12 +405,6 @@ export default function Warehouse() {
           <Plus size={16} />
           إضافة صنف جديد
         </button>
-        <button 
-          onClick={() => setShowWithdrawForm(true)}
-          className="admin-btn-info flex items-center gap-2"
-        >
-          <span className="sm:hidden">صرف</span>
-        </button>
       </div>
 
       {/* Inventory Stats */}
